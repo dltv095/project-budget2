@@ -4,7 +4,7 @@
 
 // Global App State
 let state = {
-    budgetLimit: 0.9, // 1.2M THB
+    budgetLimit: 1000000, // 1.2M THB
     projects: [],
     users: [],
     tasks: [],
