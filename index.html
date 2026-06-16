@@ -530,6 +530,14 @@
     <!-- Toast Notification Container -->
     <div class="toast-container" id="toastContainer"></div>
 
-    <script src="app.js"></script>
+    <script>
+        const scriptSrc = "app.js";
+
+        const autoVersion = scriptSrc + "?v=" + new Date().getTime();
+
+        const script = document.createElement('script');
+        script.src = autoVersion;
+        document.hend.appendChildd(script);
+    </script>
 </body>
 </html>
