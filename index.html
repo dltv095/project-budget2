@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบติดตามโครงการและงบประมาณประจำปี | Plan & Budget Tracker</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="dark-theme"> <!-- Default to dark theme for premium tech feel -->
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="app-sidebar" id="appSidebar">
+            <div class="sidebar-logo">
+                <div class="logo-icon">
+                    <i class="fa-solid fa-chart-line-up"></i>
+                </div>
+                <div class="logo-text">
+                    <span class="logo-title">BudgetFlow</span>
+                    <span class="logo-subtitle">ติดตามงบประมาณ</span>
+                </div>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <!-- Manager links -->
+                <div class="nav-section-label manager-only">หน้าหัวหน้างาน</div>
+                <a href="#" class="nav-link active manager-only" data-view="dashboard" id="navDashboard">
+                    <i class="fa-solid fa-square-poll-vertical"></i>
+                    <span>แดชบอร์ดสรุปงาน</span>
+                </a>
+                <a href="#" class="nav-link manager-only" data-view="projects" id="navProjects">
+                    <i class="fa-solid fa-folder-open"></i>
+                    <span>โครงการ & งบประมาณ</span>
+                </a>
+                <a href="#" class="nav-link manager-only" data-view="all-tasks" id="navAllTasks">
+                    <i class="fa-solid fa-list-check"></i>
+                    <span>งานทั้งหมดในทีม</span>
+                </a>
+
+                <!-- Staff links -->
+                <div class="nav-section-label">หน้าทีมงาน</div>
+                <a href="#" class="nav-link" data-view="kanban" id="navKanban">
+                    <i class="fa-solid fa-bars-progress"></i>
+                    <span id="kanbanNavLinkText">บอร์ดติดตามงาน</span>
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="user-profile-badge">
+                    <div class="avatar" id="sidebarUserAvatar">M</div>
+                    <div class="profile-info">
+                        <div class="profile-name" id="sidebarUserName">คุณสมเกียรติ</div>
+                        <div class="profile-role" id="sidebarUserRole">หัวหน้างาน (Manager)</div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Workspace -->
+        <main class="app-main">
+            <!-- Header Bar -->
+            <header class="app-header">
+                <div class="header-left">
+                    <button class="mobile-toggle-btn" id="mobileSidebarToggle">
+                        <i class="fa-solid fa-bars"></i>
+                    </button>
+                    <div class="view-title-container">
+                        <h1 id="mainViewTitle">แดชบอร์ดสรุปงานภาพรวม</h1>
+                        <p class="view-subtitle" id="mainViewSubtitle">ดูสถานะโครงการ งบประมาณคงเหลือ และความคืบหน้าของงานทั้งหมด</p>
+                    </div>
+                </div>
+
+                <div class="header-right">
+                    <!-- User Switcher Dropdown (Crucial for Prototype) -->
+                    <div class="user-switcher-container">
+                        <label for="userSwitcher" class="switcher-label">
+                            <i class="fa-solid fa-user-gear"></i> สลับผู้ใช้จำลอง:
+                        </label>
+                        <select id="userSwitcher" class="user-select">
+                            <!-- Options added dynamically via JS -->
+                        </select>
+                    </div>
+
+                    <!-- Reset DB Button -->
+                    <button class="theme-toggle-btn" id="resetDbBtn" title="รีเซ็ตข้อมูลระบบเป็นค่าเริ่มต้นตามโค้ด" style="width: auto; padding: 0 12px; gap: 6px; font-size: 12px; font-weight: 600;">
+                        <i class="fa-solid fa-rotate-left"></i>
+                        <span class="mobile-hidden-text">รีเซ็ตข้อมูล</span>
+                    </button>
+
+                    <!-- Theme Toggle -->
+                    <button class="theme-toggle-btn" id="themeToggleBtn" title="สลับโหมด มืด/สว่าง">
+                        <i class="fa-solid fa-sun icon-sun"></i>
+                        <i class="fa-solid fa-moon icon-moon"></i>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Main Content Container (Dynamic Views) -->
+            <div class="content-body">
+                
+                <!-- VIEW 1: MANAGER DASHBOARD -->
+                <section class="content-view active" id="viewDashboard">
+                    <!-- KPI Cards Grid -->
+                    <div class="kpi-grid">
+                        <div class="kpi-card budget-total hidden">
+                            <div class="kpi-icon"><i class="fa-solid fa-sack-dollar"></i></div>
+                            <div class="kpi-details">
+                                <span class="kpi-label">งบประมาณประจำปีรวม</span>
+                                <span class="kpi-value" id="kpiTotalBudget">฿1,200,000</span>
+                                <span class="kpi-trend neutral"><i class="fa-solid fa-circle-info"></i> งบประมาณจัดสรรประจำปี 2569</span>
+                            </div>
+                        </div>
+                        <div class="kpi-card budget-allocated">
+                            <div class="kpi-icon"><i class="fa-solid fa-file-invoice-dollar"></i></div>
+                            <div class="kpi-details">
+                                <span class="kpi-label">งบประมาณจัดสรรโครงการ</span>
+                                <span class="kpi-value" id="kpiAllocatedBudget">฿1,020,000</span>
+                                <span class="kpi-trend text-blue" id="kpiAllocatedPercent">85.0% ของงบรวม</span>
+                            </div>
+                        </div>
+                        <div class="kpi-card budget-spent">
+                            <div class="kpi-icon"><i class="fa-solid fa-receipt"></i></div>
+                            <div class="kpi-details">
+                                <span class="kpi-label">งบประมาณใช้จริง (ผูกกับงาน)</span>
+                                <span class="kpi-value" id="kpiSpentBudget">฿0</span>
+                                <span class="kpi-trend text-orange" id="kpiSpentPercent">0% ของงบจัดสรร</span>
+                            </div>
+                        </div>
+                        <div class="kpi-card budget-remaining">
+                            <div class="kpi-icon"><i class="fa-solid fa-vault"></i></div>
+                            <div class="kpi-details">
+                                <span class="kpi-label">งบประมาณรวมคงเหลือ</span>
+                                <span class="kpi-value" id="kpiRemainingBudget">฿1,200,000</span>
+                                <span class="kpi-trend text-green" id="kpiRemainingPercent">100% ของงบรวม</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Layout Row for Projects and Charts -->
+                    <div class="dashboard-row">
+                        <!-- Project List Cards -->
+                        <div class="dashboard-col col-7">
+                            <div class="card-container">
+                                <div class="card-header">
+                                    <div class="header-title-group">
+                                        <h3>สถานะงบประมาณโครงการย่อย</h3>
+                                        <p>งบประมาณจัดสรรรายโครงการและการใช้จ่ายในระบบ</p>
+                                    </div>
+                                    <button class="btn btn-sm btn-outline manager-only-action" id="dashboardAddProjectBtn">
+                                        <i class="fa-solid fa-plus"></i> เพิ่มโครงการ
+                                    </button>
+                                </div>
+                                <div class="project-list-wrapper" id="dashboardProjectList">
+                                    <!-- Projects injected via JS -->
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Mini Charts -->
+                        <div class="dashboard-col col-5">
+                            <div class="card-container">
+                                <div class="card-header">
+                                    <h3>สัดส่วนการใช้งบประมาณ</h3>
+                                </div>
+                                <div class="chart-wrapper">
+                                    <canvas id="budgetShareChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Workload and Task Distribution Row -->
+                    <div class="dashboard-row">
+                        <div class="dashboard-col col-6">
+                            <div class="card-container">
+                                <div class="card-header">
+                                    <h3>ภาระงานของทีมงานรายบุคคล</h3>
+                                </div>
+                                <div class="chart-wrapper">
+                                    <canvas id="workloadChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="dashboard-col col-6">
+                            <div class="card-container">
+                                <div class="card-header">
+                                    <div class="header-title-group">
+                                        <h3>งานที่ล่าช้าหรือใกล้ถึงกำหนดส่ง (Overdue / Urgent)</h3>
+                                        <p>งานที่ต้องการการดูแลอย่างใกล้ชิด</p>
+                                    </div>
+                                </div>
+                                <div class="urgent-tasks-wrapper" id="urgentTasksList">
+                                    <!-- Urgent Tasks injected via JS -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- VIEW 2: PROJECTS MANAGEMENT (MANAGER ONLY) -->
+                <section class="content-view" id="viewProjects">
+                    <div class="card-container">
+                        <div class="card-header flex-between">
+                            <div class="header-title-group">
+                                <h2>โครงการประจำปีและงบประมาณย่อย</h2>
+                                <p>จัดการโควตาและตรวจสอบความคุ้มค่าของงบประมาณโครงการในแต่ละงาน</p>
+                            </div>
+                            <button class="btn btn-primary" id="manageAddProjectBtn">
+                                <i class="fa-solid fa-plus"></i> เพิ่มโครงการใหม่
+                            </button>
+                        </div>
+
+                        <div class="projects-table-container">
+                            <table class="app-table">
+                                <thead>
+                                    <tr>
+                                        <th>ชื่อโครงการ / งานที่รับผิดชอบ</th>
+                                        <th>ผู้รับผิดชอบหลัก</th>
+                                        <th class="text-right">งบประมาณจัดสรร</th>
+                                        <th class="text-right">ใช้จ่ายจริงแล้ว</th>
+                                        <th class="text-right">งบประมาณคงเหลือ</th>
+                                        <th>การดำเนินงานของงาน (Tasks)</th>
+                                        <th>จัดการ</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="projectsTableBody">
+                                    <!-- Injected via JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- VIEW 3: KANBAN BOARD (MEMBERS & MASTER VIEW FOR MANAGER) -->
+                <section class="content-view" id="viewKanban">
+                    <!-- Kanban Header Bar with Search & Filters -->
+                    <div class="kanban-controls">
+                        <div class="search-filter-group">
+                            <div class="search-input-wrapper">
+                                <i class="fa-solid fa-magnifying-glass"></i>
+                                <input type="text" id="kanbanSearchInput" placeholder="ค้นหาชื่องานหรือรายละเอียด...">
+                            </div>
+                            <div class="filter-select-wrapper">
+                                <select id="kanbanProjectFilter" class="filter-select">
+                                    <option value="all">ทุกโครงการ</option>
+                                    <!-- Projects injected via JS -->
+                                </select>
+                            </div>
+                            <div class="filter-select-wrapper">
+                                <select id="kanbanPriorityFilter" class="filter-select">
+                                    <option value="all">ทุกระดับความสำคัญ</option>
+                                    <option value="high">ระดับสูง (High)</option>
+                                    <option value="medium">ระดับกลาง (Medium)</option>
+                                    <option value="low">ระดับต่ำ (Low)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <button class="btn btn-primary" id="kanbanAddTaskBtn">
+                            <i class="fa-solid fa-plus"></i> เพิ่มงานใหม่
+                        </button>
+                    </div>
+
+                    <!-- Kanban Board Columns Grid -->
+                    <div class="kanban-board-grid">
+                        <!-- Column 1: TODO -->
+                        <div class="kanban-column" data-status="todo" id="colTodo">
+                            <div class="column-header">
+                                <div class="column-title-group">
+                                    <span class="status-dot dot-todo"></span>
+                                    <h3>งานที่จะทำ</h3>
+                                    <span class="task-count" id="countTodo">0</span>
+                                </div>
+                                <button class="col-add-btn" data-status="todo" title="เพิ่มงานลงคอลัมน์นี้">
+                                    <i class="fa-solid fa-plus"></i>
+                                </button>
+                            </div>
+                            <div class="column-cards-area" id="cardsTodo" ondragover="allowDrop(event)" ondrop="dropTask(event)">
+                                <!-- Task cards injected via JS -->
+                            </div>
+                        </div>
+
+                        <!-- Column 2: IN PROGRESS -->
+                        <div class="kanban-column" data-status="inprogress" id="colInProgress">
+                            <div class="column-header">
+                                <div class="column-title-group">
+                                    <span class="status-dot dot-inprogress"></span>
+                                    <h3>กำลังดำเนินการ</h3>
+                                    <span class="task-count" id="countInProgress">0</span>
+                                </div>
+                                <button class="col-add-btn" data-status="inprogress" title="เพิ่มงานลงคอลัมน์นี้">
+                                    <i class="fa-solid fa-plus"></i>
+                                </button>
+                            </div>
+                            <div class="column-cards-area" id="cardsInProgress" ondragover="allowDrop(event)" ondrop="dropTask(event)">
+                                <!-- Task cards injected via JS -->
+                            </div>
+                        </div>
+
+                        <!-- Column 3: IN REVIEW -->
+                        <div class="kanban-column" data-status="inreview" id="colInReview">
+                            <div class="column-header">
+                                <div class="column-title-group">
+                                    <span class="status-dot dot-inreview"></span>
+                                    <h3>รอการตรวจทาน</h3>
+                                    <span class="task-count" id="countInReview">0</span>
+                                </div>
+                                <button class="col-add-btn" data-status="inreview" title="เพิ่มงานลงคอลัมน์นี้">
+                                    <i class="fa-solid fa-plus"></i>
+                                </button>
+                            </div>
+                            <div class="column-cards-area" id="cardsInReview" ondragover="allowDrop(event)" ondrop="dropTask(event)">
+                                <!-- Task cards injected via JS -->
+                            </div>
+                        </div>
+
+                        <!-- Column 4: COMPLETED -->
+                        <div class="kanban-column" data-status="completed" id="colCompleted">
+                            <div class="column-header">
+                                <div class="column-title-group">
+                                    <span class="status-dot dot-completed"></span>
+                                    <h3>เสร็จสมบูรณ์</h3>
+                                    <span class="task-count" id="countCompleted">0</span>
+                                </div>
+                                <button class="col-add-btn" data-status="completed" title="เพิ่มงานลงคอลัมน์นี้">
+                                    <i class="fa-solid fa-plus"></i>
+                                </button>
+                            </div>
+                            <div class="column-cards-area" id="cardsCompleted" ondragover="allowDrop(event)" ondrop="dropTask(event)">
+                                <!-- Task cards injected via JS -->
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- VIEW 4: ALL TASKS LIST (MANAGER VIEW - CONSOLIDATED TABLE) -->
+                <section class="content-view" id="viewAllTasks">
+                    <div class="card-container">
+                        <div class="card-header flex-between">
+                            <div class="header-title-group">
+                                <h2>ตารางติดตามงานทั้งหมดในทีม</h2>
+                                <p>ดูประวัติงาน ค้นหา แก้ไข และกรองงานของสมาชิกทุกคนได้ในหน้าเดียว</p>
+                            </div>
+                            <div class="table-actions">
+                                <button class="btn btn-primary btn-sm" id="allTasksAddNewBtn">
+                                    <i class="fa-solid fa-plus"></i> เพิ่มงานใหม่
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="table-filters-bar">
+                            <div class="filter-field">
+                                <label for="tableSearchInput">ค้นหา:</label>
+                                <input type="text" id="tableSearchInput" placeholder="ค้นหาชื่องาน, สมาชิก...">
+                            </div>
+                            <div class="filter-field">
+                                <label for="tableProjectFilter">โครงการ:</label>
+                                <select id="tableProjectFilter">
+                                    <option value="all">ทั้งหมด</option>
+                                </select>
+                            </div>
+                            <div class="filter-field">
+                                <label for="tableUserFilter">ผู้รับผิดชอบ:</label>
+                                <select id="tableUserFilter">
+                                    <option value="all">ทั้งหมด</option>
+                                </select>
+                            </div>
+                            <div class="filter-field">
+                                <label for="tableStatusFilter">สถานะ:</label>
+                                <select id="tableStatusFilter">
+                                    <option value="all">ทั้งหมด</option>
+                                    <option value="todo">ที่จะทำ</option>
+                                    <option value="inprogress">กำลังทำ</option>
+                                    <option value="inreview">รอตรวจทาน</option>
+                                    <option value="completed">เสร็จสิ้น</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="tasks-table-container">
+                            <table class="app-table">
+                                <thead>
+                                    <tr>
+                                        <th>ชื่องาน</th>
+                                        <th>โครงการ</th>
+                                        <th>ผู้รับผิดชอบ</th>
+                                        <th class="text-right">งบประมาณ</th>
+                                        <th>กำหนดส่ง</th>
+                                        <th>ความสำคัญ</th>
+                                        <th>สถานะ</th>
+                                        <th>จัดการ</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="allTasksTableBody">
+                                    <!-- Injected via JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- MODAL 1: ADD/EDIT TASK -->
+    <div class="modal-backdrop" id="taskModal">
+        <div class="modal-content glass">
+            <div class="modal-header">
+                <h3 id="taskModalTitle">เพิ่มงานใหม่</h3>
+                <button class="close-modal-btn" id="closeTaskModalBtn">&times;</button>
+            </div>
+            <form id="taskForm">
+                <input type="hidden" id="taskIdField">
+                
+                <div class="form-group">
+                    <label for="taskTitle" class="required">ชื่องาน</label>
+                    <input type="text" id="taskTitle" required placeholder="เช่น พัฒนาระบบหน้าต่างล็อกอิน">
+                </div>
+
+                <div class="form-group">
+                    <label for="taskDescription">รายละเอียดงาน</label>
+                    <textarea id="taskDescription" rows="3" placeholder="ระบุขอบเขตและขั้นตอนการดำเนินงานที่เกี่ยวข้อง"></textarea>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group col-6">
+                        <label for="taskProject" class="required">โครงการ/ฝ่าย</label>
+                        <select id="taskProject" required>
+                            <!-- Injected dynamically -->
+                        </select>
+                    </div>
+                    <div class="form-group col-6">
+                        <label for="taskCost" class="required">งบประมาณในงาน (฿)</label>
+                        <input type="number" id="taskCost" required min="0" step="any" placeholder="เช่น 150">
+                        <span class="input-helper" id="projectBudgetWarning"></span>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group col-6">
+                        <label for="taskStartDate" class="required">วันที่เริ่มต้น</label>
+                        <input type="date" id="taskStartDate" required>
+                    </div>
+                    <div class="form-group col-6">
+                        <label for="taskDeadline" class="required">วันกำหนดส่ง (Deadline)</label>
+                        <input type="date" id="taskDeadline" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group col-6">
+                        <label for="taskPriority" class="required">ความสำคัญ</label>
+                        <select id="taskPriority" required>
+                            <option value="low">ต่ำ (Low)</option>
+                            <option value="medium" selected>ปานกลาง (Medium)</option>
+                            <option value="high">สูง (High)</option>
+                        </select>
+                    </div>
+                    <div class="form-group col-6">
+                        <label for="taskStatus" class="required">สถานะงาน</label>
+                        <select id="taskStatus" required>
+                            <option value="todo">ที่จะทำ (To Do)</option>
+                            <option value="inprogress">กำลังดำเนินการ (In Progress)</option>
+                            <option value="inreview">รอการตรวจทาน (In Review)</option>
+                            <option value="completed">เสร็จสมบูรณ์ (Completed)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group" id="assigneeFormGroup">
+                    <label for="taskAssignee">ผู้รับผิดชอบงาน</label>
+                    <select id="taskAssignee">
+                        <!-- Injected dynamically -->
+                    </select>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline" id="cancelTaskModalBtn">ยกเลิก</button>
+                    <button type="submit" class="btn btn-primary" id="saveTaskBtn">บันทึกงาน</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 2: ADD/EDIT PROJECT (MANAGER ONLY) -->
+    <div class="modal-backdrop" id="projectModal">
+        <div class="modal-content glass">
+            <div class="modal-header">
+                <h3 id="projectModalTitle">เพิ่มโครงการใหม่</h3>
+                <button class="close-modal-btn" id="closeProjectModalBtn">&times;</button>
+            </div>
+            <form id="projectForm">
+                <input type="hidden" id="projectIdField">
+                
+                <div class="form-group">
+                    <label for="projectName" class="required">ชื่อโครงการ/ฝ่ายงาน</label>
+                    <input type="text" id="projectName" required placeholder="เช่น งานวิจัยพัฒนาเทคโนโลยี">
+                </div>
+
+                <div class="form-group">
+                    <label for="projectBudget" class="required">งบประมาณจัดสรร (฿)</label>
+                    <input type="number" id="projectBudget" required min="0" step="any" placeholder="เช่น 200000">
+                    <span class="input-helper" id="annualBudgetQuotaWarning"></span>
+                </div>
+
+                <div class="form-group">
+                    <label for="projectLead" class="required">ผู้ดูแลโครงการ</label>
+                    <select id="projectLead" required>
+                        <!-- Injected dynamically -->
+                    </select>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline" id="cancelProjectModalBtn">ยกเลิก</button>
+                    <button type="submit" class="btn btn-primary" id="saveProjectBtn">บันทึกโครงการ</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="app.js"></script>
+</body>
+</html>
