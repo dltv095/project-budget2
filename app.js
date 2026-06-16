@@ -422,7 +422,7 @@ function renderDashboardView() {
     const remainingBudget = totalAllocated - totalSpent;
 
     // Update KPI UI
-    document.getElementById('kpiTotalBudget').textContent = formatCurrency(state.budgetLimit);
+    document.getElementById('kpiTotalBudget').textContent = '1000000';
     document.getElementById('kpiAllocatedBudget').textContent = formatCurrency(totalAllocated);
     document.getElementById('kpiSpentBudget').textContent = formatCurrency(totalSpent);
     document.getElementById('kpiRemainingBudget').textContent = formatCurrency(remainingBudget);
